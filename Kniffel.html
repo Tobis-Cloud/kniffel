@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Digitaler Kniffel-Block - Ein moderner, minimalistischer Kniffel-Block mit edlem Neon-Glow für mehrere Spieler.">
+  <title>Digitaler Kniffel-Block</title>
+  
+  <!-- PWA / Mobile Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Kniffel">
+  <meta name="mobile-web-app-capable" content="yes">
+  
+  <!-- App Icons -->
+  <link rel="apple-touch-icon" href="Kniffel.jpeg">
+  <link rel="icon" type="image/jpeg" href="Kniffel.jpeg">
+
+  <style>
+    /* SOFT MODERN NEON DESIGN TOKENS */
+    :root {
+      --bg-black: #050505;
+      
+      /* Neon Light Tones */
+      --neon-pink: #ff65a3;
+      --neon-purple: #b666ff;
+      --neon-blue: #3b82f6;
+      --neon-red: #ff6b6b;
+      --neon-orange: #d97706;
+      
+      /* Ambient Glows */
+      --glow-pink: 0 0 15px rgba(255, 101, 163, 0.35), 0 0 35px rgba(255, 101, 163, 0.15);
+      --glow-purple: 0 0 15px rgba(182, 102, 255, 0.35), 0 0 35px rgba(182, 102, 255, 0.15);
+      --glow-blue: 0 0 15px rgba(59, 130, 246, 0.35), 0 0 35px rgba(59, 130, 246, 0.15);
+      --glow-red: 0 0 15px rgba(255, 107, 107, 0.35), 0 0 35px rgba(255, 107, 107, 0.15);
+      
+      --glow-text-pink: 0 0 8px rgba(255, 101, 163, 0.5), 0 0 25px rgba(255, 101, 163, 0.2);
+      --glow-text-purple: 0 0 8px rgba(182, 102, 255, 0.5), 0 0 25px rgba(182, 102, 255, 0.2);
+      --glow-text-blue: 0 0 8px rgba(59, 130, 246, 0.5), 0 0 25px rgba(59, 130, 246, 0.2);
+
+      --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --transition-slow: 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+      --transition-fast: 0.3s ease;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-black);
+      color: #ffffff;
+      font-family: var(--font-family);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 20px 10px;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* BACKGROUND AMBIENT GLOW */
+    .ambient-glow {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, rgba(182, 102, 255, 0.08) 0%, rgba(255, 101, 163, 0.04) 50%, rgba(0,0,0,0) 80%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* GLASS CONTAINER */
+    .container {
+      width: 100%;
+      max-width: 550px;
+      padding: 2rem;
+      border-radius: 28px;
+      background: rgba(8, 8, 8, 0.45);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .phase {
+      display: none;
+    }
+    .phase.active {
+      display: block;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 300;
+      color: #ffffff;
+      text-shadow: var(--glow-text-purple);
+      text-align: center;
+      margin-bottom: 0.5rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    .sub-headline {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.4);
+      text-align: center;
+      margin-bottom: 2rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    h2 {
+      font-size: 1rem;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-align: center;
+    }
+
+    /* MODE SELECTOR RADIO SWITCH */
+    .mode-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .mode-option {
+      position: relative;
+      cursor: pointer;
+      display: block;
+    }
+
+    .mode-option input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .mode-card {
+      padding: 0.8rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.01);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all var(--transition-fast);
+      text-align: center;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .mode-option input:checked + .mode-card {
+      background: rgba(182, 102, 255, 0.05);
+      border-color: rgba(182, 102, 255, 0.6);
+      box-shadow: var(--glow-purple);
+      color: #ffffff;
+      text-shadow: 0 0 3px rgba(255, 255, 255, 0.4);
+    }
+
+    /* INPUTS & BUTTONS */
+    .player-input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 1.5rem;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 1rem;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.02);
+      color: #ffffff;
+      font-size: 1rem;
+      outline: none;
+      transition: all var(--transition-fast);
+    }
+
+    input[type="text"]:focus {
+      border-color: rgba(182, 102, 255, 0.6);
+      background: rgba(182, 102, 255, 0.05);
+      box-shadow: var(--glow-purple);
+    }
+
+    .btn {
+      padding: 1rem 1.5rem;
+      background: transparent;
+      color: #ffffff;
+      border-radius: 14px;
+      font-family: var(--font-family);
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-primary {
+      border-color: rgba(182, 102, 255, 0.6);
+      box-shadow: var(--glow-purple);
+      text-shadow: 0 0 3px #ffffff;
+    }
+    .btn-primary:hover {
+      background: rgba(182, 102, 255, 0.1);
+      box-shadow: 0 0 20px rgba(182, 102, 255, 0.4);
+    }
+
+    .btn-success {
+      width: 100%;
+      margin-top: 1rem;
+      border-color: rgba(255, 101, 163, 0.6);
+      box-shadow: var(--glow-pink);
+      text-shadow: 0 0 3px #ffffff;
+    }
+    .btn-success:hover {
+      background: rgba(255, 101, 163, 0.1);
+      box-shadow: 0 0 20px rgba(255, 101, 163, 0.4);
+    }
+    .btn-success:disabled {
+      border-color: rgba(255, 255, 255, 0.05);
+      color: rgba(255, 255, 255, 0.2);
+      box-shadow: none;
+      text-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .btn-accent {
+      padding: 0.5rem 1rem;
+      font-size: 0.75rem;
+      border-color: rgba(255, 107, 107, 0.4);
+      color: rgba(255, 255, 255, 0.8);
+    }
+    .btn-accent:hover {
+      background: rgba(255, 107, 107, 0.15);
+      border-color: var(--neon-red);
+      box-shadow: var(--glow-red);
+    }
+
+    .reset-btn {
+      width: 100%;
+      padding: 0.8rem;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(255, 107, 107, 0.3);
+      border-radius: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      margin-top: 1rem;
+    }
+    .reset-btn:hover {
+      border-color: var(--neon-red);
+      color: #ffffff;
+      box-shadow: var(--glow-red);
+      background: rgba(255, 107, 107, 0.05);
+    }
+
+    /* PLAYER SETUP LIST */
+    .player-list {
+      margin: 1.5rem 0;
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 14px;
+      padding: 10px;
+    }
+
+    .player-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    .player-item:last-child {
+      border-bottom: none;
+    }
+    .player-item span {
+      font-size: 0.95rem;
+      letter-spacing: 1px;
+    }
+
+    /* ANLEITUNG ACCORDION */
+    details {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 12px;
+      border-radius: 14px;
+      margin-bottom: 1.5rem;
+    }
+    summary {
+      font-weight: 500;
+      cursor: pointer;
+      color: rgba(255, 255, 255, 0.5);
+      letter-spacing: 1px;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+    }
+    details p, details ul {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      padding-left: 15px;
+      color: rgba(255, 255, 255, 0.5);
+    }
+    details li {
+      margin-bottom: 4px;
+    }
+
+    /* ACTIVE TURN BANNER */
+    .current-turn-banner {
+      text-align: center;
+      background: rgba(59, 130, 246, 0.05);
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      box-shadow: var(--glow-blue);
+      text-shadow: var(--glow-text-blue);
+      padding: 12px;
+      border-radius: 14px;
+      margin-bottom: 1.5rem;
+      font-weight: 400;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-size: 0.95rem;
+    }
+
+    /* DICE AREA */
+    .dice-area {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      padding: 1.5rem;
+      border-radius: 20px;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .dice-container {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      gap: 10px;
+    }
+
+    .die {
+      width: 18%;
+      aspect-ratio: 1;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      font-weight: 300;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      color: #ffffff;
+    }
+    .die:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .die.held {
+      background: rgba(219, 119, 6, 0.1);
+      color: #ffffff;
+      border-color: var(--neon-orange);
+      transform: translateY(-4px);
+      box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3);
+    }
+
+    .roll-btn {
+      width: 100%;
+      padding: 1rem;
+      background: transparent;
+      color: #ffffff;
+      border: 1px solid rgba(255, 101, 163, 0.6);
+      border-radius: 14px;
+      font-family: var(--font-family);
+      font-size: 1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      cursor: pointer;
+      box-shadow: var(--glow-pink);
+      text-shadow: 0 0 3px #ffffff;
+      transition: all var(--transition-fast);
+    }
+    .roll-btn:hover:not(:disabled) {
+      background: rgba(255, 101, 163, 0.1);
+      box-shadow: 0 0 20px rgba(255, 101, 163, 0.4);
+    }
+    .roll-btn:disabled {
+      border-color: rgba(255, 255, 255, 0.05);
+      color: rgba(255, 255, 255, 0.15);
+      box-shadow: none;
+      text-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .rolls-left {
+      font-size: 0.8rem;
+      margin-top: 10px;
+      color: rgba(255, 255, 255, 0.4);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* SCOREBOARD TABLE */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      margin-bottom: 1.5rem;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(10, 10, 10, 0.2);
+      min-width: 340px;
+    }
+
+    th, td {
+      padding: 12px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      text-align: center;
+      font-size: 0.85rem;
+    }
+
+    th:first-child, td:first-child {
+      text-align: left;
+      font-weight: 400;
+      background: rgba(20, 20, 20, 0.8);
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      min-width: 140px;
+      letter-spacing: 1px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    th {
+      background: rgba(15, 15, 15, 0.6);
+      font-weight: 500;
+      color: #ffffff;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+    }
+
+    /* Active Player Column Highlight */
+    td.active-col, th.active-col {
+      background-color: rgba(59, 130, 246, 0.04);
+    }
+
+    th.active-col {
+      border-bottom: 2px solid rgba(59, 130, 246, 0.4);
+      color: var(--neon-blue);
+    }
+
+    .score-row {
+      cursor: pointer;
+    }
+    .score-row:hover:not(.filled) td.active-col {
+      background: rgba(59, 130, 246, 0.12);
+      color: #ffffff;
+    }
+
+    .score-preview {
+      color: rgba(255, 255, 255, 0.25);
+      font-style: italic;
+    }
+
+    td.active-col.score-preview {
+      color: rgba(59, 130, 246, 0.5);
+    }
+
+    .filled .score-preview {
+      color: #ffffff;
+      font-style: normal;
+      font-weight: 500;
+    }
+
+    /* System / Total Rows */
+    .system-row {
+      background: rgba(255, 255, 255, 0.02);
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.9);
+    }
+    .system-row td:first-child {
+      background: rgba(20, 20, 20, 0.9);
+    }
+
+    .grand-total-row {
+      background: rgba(182, 102, 255, 0.08) !important;
+      font-weight: 600;
+    }
+    .grand-total-row td {
+      border-top: 1px solid rgba(182, 102, 255, 0.3);
+      border-bottom: 1px solid rgba(182, 102, 255, 0.3) !important;
+      color: #ffffff;
+      text-shadow: 0 0 5px rgba(182, 102, 255, 0.5);
+    }
+    .grand-total-row td:first-child {
+      background: rgba(182, 102, 255, 0.15) !important;
+    }
+
+    /* Breathing Button Animation for Starter */
+    @keyframes breathing-glow {
+      0% { box-shadow: 0 0 12px rgba(255, 101, 163, 0.25); border-color: rgba(255, 101, 163, 0.4); }
+      50% { box-shadow: 0 0 22px rgba(255, 101, 163, 0.5); border-color: rgba(255, 101, 163, 0.8); }
+      100% { box-shadow: 0 0 12px rgba(255, 101, 163, 0.25); border-color: rgba(255, 101, 163, 0.4); }
+    }
+    .pulse-btn {
+      animation: breathing-glow 5s infinite ease-in-out;
+    }
+
+    /* RESPONSIVENESS */
+    @media (max-width: 480px) {
+      .container {
+        padding: 1.5rem 1rem;
+        border-radius: 20px;
+      }
+      h1 {
+        font-size: 1.6rem;
+      }
+      th, td {
+        padding: 10px 6px;
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ambient-glow"></div>
+
+  <div class="container">
+    <h1>Kniffel</h1>
+    <div class="sub-headline">Digitaler Spielblock</div>
+
+    <!-- PHASE 1: SETUP -->
+    <div id="phaseSetup" class="phase setup-container active">
+      <h2>Modus wählen</h2>
+      <div class="mode-selector">
+        <label class="mode-option">
+          <input type="radio" name="game-mode" value="digital" checked>
+          <div class="mode-card">Digital würfeln</div>
+        </label>
+        <label class="mode-option">
+          <input type="radio" name="game-mode" value="real">
+          <div class="mode-card">Echte Würfel</div>
+        </label>
+      </div>
+
+      <h2>Spieler-Setup</h2>
+      <div class="player-input-group">
+        <input type="text" id="playerNameInput" placeholder="Name des Spielers..." maxlength="12">
+        <button class="btn btn-primary" onclick="addPlayer()">Hinzufügen</button>
+      </div>
+      
+      <div class="player-list" id="playerListContainer">
+        <!-- Dynamische Spielerliste -->
+      </div>
+
+      <button class="btn btn-success pulse-btn" id="startGameBtn" onclick="startGame()" disabled>Spiel starten</button>
+      <button class="reset-btn" style="margin-top: 1.5rem;" onclick="completelyResetAll()">Alle Spieler löschen</button>
+    </div>
+
+    <!-- PHASE 2: GAMEPLAY -->
+    <div id="phaseGame" class="phase">
+      <details>
+        <summary>Spielanleitung</summary>
+        <p><strong>Ziel:</strong> Erreiche so viele Punkte wie möglich durch Würfelkombinationen.</p>
+        <ul>
+          <li>Reihum ist jeder Spieler an der Reihe. Du hast maximal 3 Würfe pro Runde.</li>
+          <li><strong>Digital-Modus:</strong> Klicke auf Würfel zum Halten und nutze den Wurf-Button.</li>
+          <li><strong>Echte Würfel:</strong> Würfle real und klicke auf „Nächster Schritt (Eintragen)“, um deine Punkte einzutragen.</li>
+          <li>Tippe dein Feld in der Tabelle an, um Punkte zu sichern oder das Feld zu streichen.</li>
+          <li><strong>Bonus:</strong> Bei mindestens 63 Punkten im oberen Teil gibt es 35 Punkte extra.</li>
+        </ul>
+      </details>
+
+      <div class="current-turn-banner" id="currentTurnBanner">
+        Am Zug: -
+      </div>
+
+      <!-- Würfelbereich -->
+      <div class="dice-area" id="diceArea">
+        <!-- Wird per JS befüllt -->
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead id="tableHead">
+            <!-- Dynamisch -->
+          </thead>
+          <tbody id="tableBody">
+            <!-- Dynamisch -->
+          </tbody>
+        </table>
+      </div>
+
+      <button class="reset-btn" onclick="resetScoresKeepPlayers()">Spiel abbrechen / Spieler behalten</button>
+    </div>
+  </div>
+
+  <script>
+    const rowsConfig = [
+      { id: '1', name: '1er', type: 'upper' },
+      { id: '2', name: '2er', type: 'upper' },
+      { id: '3', name: '3er', type: 'upper' },
+      { id: '4', name: '4er', type: 'upper' },
+      { id: '5', name: '5er', type: 'upper' },
+      { id: '6', name: '6er', type: 'upper' },
+      { id: 'subtotal-top', name: 'Zwischensumme Oben', type: 'system' },
+      { id: 'bonus-top', name: 'Bonus (+35 bei ≥63)', type: 'system' },
+      { id: 'total-top', name: 'Gesamt Oberer Teil', type: 'system' },
+      { id: 'pasch3', name: 'Dreierpasch', type: 'lower' },
+      { id: 'pasch4', name: 'Viererpasch', type: 'lower' },
+      { id: 'fullhouse', name: 'Full House (25 P.)', type: 'lower' },
+      { id: 'klstrasse', name: 'Kleine Straße (30 P.)', type: 'lower' },
+      { id: 'grstrasse', name: 'Große Straße (40 P.)', type: 'lower' },
+      { id: 'kniffel', name: 'Kniffel (50 P.)', type: 'lower' },
+      { id: 'chance', name: 'Chance', type: 'lower' },
+      { id: 'total-bottom', name: 'Gesamt Unterer Teil', type: 'system' },
+      { id: 'grand-total', name: 'ENDERGEBNIS', type: 'grand-system' }
+    ];
+
+    let state = {
+      phase: 'setup',
+      mode: 'digital',
+      players: [],
+      activePlayerIdx: 0,
+      dice: [0, 0, 0, 0, 0],
+      held: [false, false, false, false, false],
+      rollsLeft: 3,
+      hasRolled: false
+    };
+
+    window.onload = function() {
+      if (localStorage.getItem('kniffel_neon_state')) {
+        state = JSON.parse(localStorage.getItem('kniffel_neon_state'));
+        
+        if (state.phase === 'setup' && state.mode) {
+          const radio = document.querySelector(`input[name="game-mode"][value="${state.mode}"]`);
+          if (radio) radio.checked = true;
+        }
+
+        if (state.phase === 'game') {
+          showPhase('phaseGame');
+          setupInterfaceForMode();
+          buildTable();
+          updateTableUI();
+          if (state.mode === 'digital') renderDice();
+        } else {
+          showPhase('phaseSetup');
+          renderSetupPlayers();
+        }
+      } else {
+        clearToSetup();
+      }
+    };
+
+    function saveState() {
+      localStorage.setItem('kniffel_neon_state', JSON.stringify(state));
+    }
+
+    function resetScoresKeepPlayers() {
+      if (confirm("Möchtest du das aktuelle Spiel abbrechen? Die Punkte und Würfel werden zurückgesetzt, aber die Spieler bleiben für eine neue Runde gespeichert.")) {
+        state.phase = 'setup';
+        state.activePlayerIdx = 0;
+        state.dice = [0, 0, 0, 0, 0];
+        state.held = [false, false, false, false, false];
+        state.rollsLeft = 3;
+        state.hasRolled = false;
+        
+        state.players.forEach(p => p.scores = {});
+
+        saveState();
+        showPhase('phaseSetup');
+        renderSetupPlayers();
+      }
+    }
+
+    function completelyResetAll() {
+      if (confirm("Möchtest du wirklich alle Spieler und Daten löschen?")) {
+        clearToSetup();
+      }
+    }
+
+    function clearToSetup() {
+      state = {
+        phase: 'setup',
+        mode: 'digital',
+        players: [],
+        activePlayerIdx: 0,
+        dice: [0, 0, 0, 0, 0],
+        held: [false, false, false, false, false],
+        rollsLeft: 3,
+        hasRolled: false
+      };
+      saveState();
+      showPhase('phaseSetup');
+      renderSetupPlayers();
+      const radio = document.querySelector('input[name="game-mode"][value="digital"]');
+      if (radio) radio.checked = true;
+      document.getElementById('playerNameInput').value = '';
+    }
+
+    function showPhase(phaseId) {
+      document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+      document.getElementById(phaseId).classList.add('active');
+    }
+
+    function addPlayer() {
+      const input = document.getElementById('playerNameInput');
+      const name = input.value.trim();
+      if (!name) return;
+
+      if (state.players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+        alert("Dieser Name existiert bereits!");
+        return;
+      }
+
+      state.players.push({ name: name, scores: {} });
+      input.value = '';
+      saveState();
+      renderSetupPlayers();
+    }
+
+    function removePlayer(idx) {
+      state.players.splice(idx, 1);
+      saveState();
+      renderSetupPlayers();
+    }
+
+    function renderSetupPlayers() {
+      const container = document.getElementById('playerListContainer');
+      container.innerHTML = '';
+
+      if (state.players.length === 0) {
+        container.innerHTML = '<p style="text-align:center; padding: 15px; color: rgba(255,255,255,0.25); font-size:0.9rem; letter-spacing: 1px;">Noch keine Spieler hinzugefügt.</p>';
+        document.getElementById('startGameBtn').disabled = true;
+        return;
+      }
+
+      state.players.forEach((p, idx) => {
+        const div = document.createElement('div');
+        div.className = 'player-item';
+        div.innerHTML = `
+          <span>${idx + 1}. <strong>${p.name}</strong></span>
+          <button class="btn btn-accent" onclick="removePlayer(${idx})">Entfernen</button>
+        `;
+        container.appendChild(div);
+      });
+
+      document.getElementById('startGameBtn').disabled = state.players.length === 0;
+    }
+
+    function startGame() {
+      if (state.players.length === 0) return;
+      
+      const selectedMode = document.querySelector('input[name="game-mode"]:checked').value;
+      state.mode = selectedMode;
+      state.phase = 'game';
+      state.activePlayerIdx = 0;
+      
+      state.dice = [0, 0, 0, 0, 0];
+      state.held = [false, false, false, false, false];
+      state.rollsLeft = 3;
+      state.hasRolled = false;
+
+      setupInterfaceForMode();
+      showPhase('phaseGame');
+      buildTable();
+      updateTableUI();
+      if (state.mode === 'digital') renderDice();
+      saveState();
+    }
+
+    function setupInterfaceForMode() {
+      const diceArea = document.getElementById('diceArea');
+      if (state.mode === 'real') {
+        diceArea.innerHTML = `
+          <button class="roll-btn pulse-btn" id="rollBtn" onclick="triggerRealNextStep()">Nächster Schritt (Eintragen)</button>
+          <div class="rolls-left" id="rollsLeftText">Würfle real und drücke den Button</div>
+        `;
+      } else {
+        diceArea.innerHTML = `
+          <div class="dice-container" id="diceContainer">
+            <div class="die" onclick="toggleHold(0)">-</div>
+            <div class="die" onclick="toggleHold(1)">-</div>
+            <div class="die" onclick="toggleHold(2)">-</div>
+            <div class="die" onclick="toggleHold(3)">-</div>
+            <div class="die" onclick="toggleHold(4)">-</div>
+          </div>
+          <button class="roll-btn" id="rollBtn" onclick="rollDice()">Würfeln</button>
+          <div class="rolls-left" id="rollsLeftText">Verbleibende Würfe: 3</div>
+        `;
+      }
+    }
+
+    function triggerRealNextStep() {
+      state.hasRolled = true;
+      saveState();
+      updateTableUI();
+      
+      const rollBtn = document.getElementById('rollBtn');
+      if (rollBtn) {
+        rollBtn.disabled = true;
+        rollBtn.classList.remove('pulse-btn');
+      }
+    }
+
+    function rollDice() {
+      if (state.rollsLeft <= 0) return;
+
+      for (let i = 0; i < 5; i++) {
+        if (!state.held[i]) {
+          state.dice[i] = Math.floor(Math.random() * 6) + 1;
+        }
+      }
+      state.rollsLeft--;
+      state.hasRolled = true;
+      
+      saveState();
+      renderDice();
+      updateTableUI();
+    }
+
+    function toggleHold(index) {
+      if (state.mode === 'real') return;
+      if (!state.hasRolled || state.rollsLeft === 0) return;
+      if (state.rollsLeft === 3) return;
+      
+      state.held[index] = !state.held[index];
+      saveState();
+      renderDice();
+    }
+
+    function renderDice() {
+      if (state.mode === 'real') return;
+      
+      const diceElements = document.querySelectorAll('.die');
+      if(diceElements.length === 0) return;
+
+      diceElements.forEach((die, i) => {
+        die.textContent = state.dice[i] === 0 ? '-' : state.dice[i];
+        if (state.held[i]) {
+          die.classList.add('held');
+        } else {
+          die.classList.remove('held');
+        }
+      });
+
+      document.getElementById('rollsLeftText').textContent = `Verbleibende Würfe: ${state.rollsLeft}`;
+      document.getElementById('rollBtn').disabled = state.rollsLeft === 0;
+    }
+
+    function calculatePoints(id, dice) {
+      if (state.mode === 'real') {
+        if (!isNaN(id)) return "Wahl";
+        switch(id) {
+          case 'pasch3': return "Wahl";
+          case 'pasch4': return "Wahl";
+          case 'fullhouse': return 25;
+          case 'klstrasse': return 30;
+          case 'grstrasse': return 40;
+          case 'kniffel': return 50;
+          case 'chance': return "Wahl";
+          default: return 0;
+        }
+      }
+
+      const counts = {};
+      dice.forEach(x => counts[x] = (counts[x] || 0) + 1);
+      const sum = dice.reduce((a, b) => a + b, 0);
+
+      if (!isNaN(id)) {
+        const target = parseInt(id);
+        return dice.filter(x => x === target).length * target;
+      }
+
+      switch(id) {
+        case 'pasch3': return Object.values(counts).some(c => c >= 3) ? sum : 0;
+        case 'pasch4': return Object.values(counts).some(c => c >= 4) ? sum : 0;
+        case 'fullhouse': 
+          const values = Object.values(counts);
+          return (values.includes(3) && values.includes(2)) || values.includes(5) ? 25 : 0;
+        case 'klstrasse': 
+          return (counts[1] && counts[2] && counts[3] && counts[4]) ||
+                 (counts[2] && counts[3] && counts[4] && counts[5]) ||
+                 (counts[3] && counts[4] && counts[5] && counts[6]) ? 30 : 0;
+        case 'grstrasse': 
+          return (counts[1] && counts[2] && counts[3] && counts[4] && counts[5]) ||
+                 (counts[2] && counts[3] && counts[4] && counts[5] && counts[6]) ? 40 : 0;
+        case 'kniffel': return Object.values(counts).some(c => c === 5) ? 50 : 0;
+        case 'chance': return sum;
+        default: return 0;
+      }
+    }
+
+    function buildTable() {
+      const thead = document.getElementById('tableHead');
+      const tbody = document.getElementById('tableBody');
+      
+      let headHtml = `<tr><th>Kombination</th>`;
+      state.players.forEach((p, idx) => {
+        const activeClass = (idx === state.activePlayerIdx) ? 'class="active-col"' : '';
+        headHtml += `<th ${activeClass} id="th-p-${idx}">${p.name}</th>`;
+      });
+      headHtml += `</tr>`;
+      thead.innerHTML = headHtml;
+
+      let bodyHtml = '';
+      rowsConfig.forEach(row => {
+        if (row.type === 'system') {
+          bodyHtml += `<tr class="system-row" id="row-${row.id}"><td>${row.name}</td>`;
+          state.players.forEach((_, pIdx) => {
+            const activeClass = (pIdx === state.activePlayerIdx) ? 'class="active-col"' : '';
+            bodyHtml += `<td ${activeClass} id="cell-${row.id}-p${pIdx}">0</td>`;
+          });
+        } else if (row.type === 'grand-system') {
+          bodyHtml += `<tr class="system-row grand-total-row" id="row-${row.id}"><td>${row.name}</td>`;
+          state.players.forEach((_, pIdx) => {
+            const activeClass = (pIdx === state.activePlayerIdx) ? 'class="active-col"' : '';
+            bodyHtml += `<td ${activeClass} id="cell-${row.id}-p${pIdx}">0</td>`;
+          });
+        } else {
+          bodyHtml += `<tr class="score-row" id="row-${row.id}" onclick="selectScore('${row.id}')"><td>${row.name}</td>`;
+          state.players.forEach((_, pIdx) => {
+            const activeClass = (pIdx === state.activePlayerIdx) ? 'active-col' : '';
+            bodyHtml += `<td class="score-preview ${activeClass}" id="cell-${row.id}-p${pIdx}">-</td>`;
+          });
+        }
+        bodyHtml += `</tr>`;
+      });
+      tbody.innerHTML = bodyHtml;
+    }
+
+    function updateTableUI() {
+      const activeIdx = state.activePlayerIdx;
+      const activePlayer = state.players[activeIdx];
+      
+      if (!activePlayer) return;
+
+      document.getElementById('currentTurnBanner').textContent = `Am Zug: ${activePlayer.name}`;
+
+      state.players.forEach((_, pIdx) => {
+        const th = document.getElementById(`th-p-${pIdx}`);
+        if(th) {
+          if(pIdx === activeIdx) th.classList.add('active-col');
+          else th.classList.remove('active-col');
+        }
+      });
+
+      state.players.forEach((player, pIdx) => {
+        let subtotalTop = 0;
+        let totalBottom = 0;
+        const isCurrent = (pIdx === activeIdx);
+
+        rowsConfig.forEach(row => {
+          const cell = document.getElementById(`cell-${row.id}-p${pIdx}`);
+          if (!cell) return;
+
+          if(isCurrent && row.type !== 'system' && row.type !== 'grand-system') {
+            cell.classList.add('active-col');
+          } else {
+            cell.classList.remove('active-col');
+          }
+
+          if (row.type === 'upper' || row.type === 'lower') {
+            const rowTr = document.getElementById(`row-${row.id}`);
+            
+            if (player.scores[row.id] !== undefined) {
+              cell.textContent = player.scores[row.id];
+              if (isCurrent) rowTr.classList.add('filled');
+              if (row.type === 'upper') subtotalTop += player.scores[row.id];
+            } else {
+              if (isCurrent) rowTr.classList.remove('filled');
+              if (isCurrent && state.hasRolled) {
+                cell.textContent = calculatePoints(row.id, state.dice);
+              } else {
+                cell.textContent = '-';
+              }
+            }
+          }
+        });
+
+        const bonus = subtotalTop >= 63 ? 35 : 0;
+        const totalTop = subtotalTop + bonus;
+
+        rowsConfig.forEach(row => {
+          if (row.type === 'lower' && player.scores[row.id] !== undefined) {
+            totalBottom += player.scores[row.id];
+          }
+        });
+
+        document.getElementById(`cell-subtotal-top-p${pIdx}`).textContent = subtotalTop;
+        document.getElementById(`cell-bonus-top-p${pIdx}`).textContent = bonus;
+        document.getElementById(`cell-total-top-p${pIdx}`).textContent = totalTop;
+        document.getElementById(`cell-total-bottom-p${pIdx}`).textContent = totalBottom;
+        document.getElementById(`cell-grand-total-p${pIdx}`).textContent = totalTop + totalBottom;
+      });
+    }
+
+    function selectScore(id) {
+      if (!state.hasRolled) return;
+      
+      const activeIdx = state.activePlayerIdx;
+      const player = state.players[activeIdx];
+
+      if (player.scores[id] !== undefined) return;
+
+      let finalPoints = 0;
+      const calculated = calculatePoints(id, state.dice);
+
+      if (state.mode === 'real' && calculated === "Wahl") {
+        const userInput = prompt(`Wie viele Punkte wurden für „${rowsConfig.find(r => r.id === id).name}“ erzielt? (Für Streichen eine 0 eingeben)`, "0");
+        finalPoints = parseInt(userInput);
+        if (isNaN(finalPoints) || finalPoints < 0) finalPoints = 0;
+      } else if (state.mode === 'real' && typeof calculated === 'number') {
+        if (confirm(`Wurden die ${calculated} Punkte für „${rowsConfig.find(r => r.id === id).name}“ erzielt?\n[OK] für Punkte eintragen\n[Abbrechen] für Streichen (0 Punkte)`)) {
+          finalPoints = calculated;
+        } else {
+          finalPoints = 0;
+        }
+      } else {
+        finalPoints = calculated;
+      }
+
+      player.scores[id] = finalPoints;
+
+      // Werte für UI sofort sichern und updaten vor dem Spielerwechsel
+      saveState();
+      updateTableUI();
+
+      const allFinished = state.players.every(p => Object.keys(p.scores).length === 13);
+
+      if (allFinished) {
+        setTimeout(() => {
+          let winnerText = "Das Spiel ist vorbei!\n\nEndergebnisse:\n";
+          let maxScore = -1;
+          let winnerName = "";
+          
+          state.players.forEach(p => {
+            let subTop = Object.keys(p.scores).filter(k => !isNaN(k)).reduce((a, b) => a + p.scores[b], 0);
+            let bon = subTop >= 63 ? 35 : 0;
+            let subBot = Object.keys(p.scores).filter(k => isNaN(k)).reduce((a, b) => a + p.scores[b], 0);
+            let final = subTop + bon + subBot;
+            
+            winnerText += `${p.name}: ${final} Punkte\n`;
+            if (final > maxScore) {
+              maxScore = final;
+              winnerName = p.name;
+            }
+          });
+          winnerText += `\nGewonnen hat: ${winnerName} 🎉`;
+          alert(winnerText);
+          clearToSetup();
+        }, 300);
+        return;
+      }
+
+      // Nächsten aktiven Spieler bestimmen
+      do {
+        state.activePlayerIdx = (state.activePlayerIdx + 1) % state.players.length;
+      } while (Object.keys(state.players[state.activePlayerIdx].scores).length === 13);
+
+      // Rundenstatus komplett zurücksetzen
+      state.dice = [0, 0, 0, 0, 0];
+      state.held = [false, false, false, false, false];
+      state.rollsLeft = 3;
+      state.hasRolled = false;
+
+      saveState();
+      
+      if (state.mode === 'real') {
+        const rollBtn = document.getElementById('rollBtn');
+        if (rollBtn) {
+          rollBtn.disabled = false;
+          rollBtn.classList.add('pulse-btn');
+        }
+      } else {
+        renderDice();
+      }
+      
+      buildTable();
+      updateTableUI();
+    }
+  </script>
+
+</body>
+</html>
