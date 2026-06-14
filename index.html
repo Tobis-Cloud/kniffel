@@ -484,18 +484,32 @@
     }
 
     .score-preview {
-      color: rgba(255, 255, 255, 0.25);
-      font-style: italic;
-    }
-
-    td.active-col.score-preview {
-      color: rgba(59, 130, 246, 0.5);
-    }
-
-    .filled .score-preview {
-      color: #ffffff;
+      color: rgba(255, 255, 255, 0.15);
       font-style: normal;
-      font-weight: 500;
+      font-weight: 300;
+    }
+
+    /* Suggestions when active player has rolled */
+    .score-preview.cell-suggestion {
+      color: rgba(182, 102, 255, 0.6); /* Soft neon-purple suggestion */
+      font-style: italic;
+      font-weight: 300;
+      text-shadow: 0 0 5px rgba(182, 102, 255, 0.2);
+    }
+
+    td.active-col.score-preview.cell-suggestion {
+      color: rgba(59, 130, 246, 0.65); /* Soft neon-blue suggestion in active column */
+      font-style: italic;
+      font-weight: 300;
+      text-shadow: 0 0 5px rgba(59, 130, 246, 0.25);
+    }
+
+    /* Locked/filled scores (Bold and bright white) */
+    .score-preview.cell-filled {
+      color: #ffffff !important;
+      font-style: normal !important;
+      font-weight: 700 !important; /* Bold */
+      text-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
     }
 
     /* System / Total Rows */
@@ -992,14 +1006,19 @@
             
             if (player.scores[row.id] !== undefined) {
               cell.textContent = player.scores[row.id];
+              cell.classList.add('cell-filled');
+              cell.classList.remove('cell-suggestion');
               if (isCurrent) rowTr.classList.add('filled');
               if (row.type === 'upper') subtotalTop += player.scores[row.id];
             } else {
+              cell.classList.remove('cell-filled');
               if (isCurrent) rowTr.classList.remove('filled');
               if (isCurrent && state.hasRolled) {
                 cell.textContent = calculatePoints(row.id, state.dice);
+                cell.classList.add('cell-suggestion');
               } else {
                 cell.textContent = '-';
+                cell.classList.remove('cell-suggestion');
               }
             }
           }
