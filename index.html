@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="description" content="Digitaler Kniffel-Block - Ein moderner, minimalistischer Kniffel-Block mit edlem Neon-Glow für mehrere Spieler.">
   <title>Digitaler Kniffel-Block</title>
   
@@ -67,7 +67,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 10px;
+      padding: calc(10px + env(safe-area-inset-top, 0px)) calc(10px + env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) calc(10px + env(safe-area-inset-left, 0px));
       overflow: hidden;
       -webkit-font-smoothing: antialiased;
       touch-action: manipulation;
@@ -301,11 +301,17 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 12px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 12px;
+      margin-bottom: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
     }
     .player-item:last-child {
-      border-bottom: none;
+      margin-bottom: 0;
     }
     .player-item span {
       font-size: 0.95rem;
@@ -635,7 +641,7 @@
 
       <h2>Spieler-Setup</h2>
       <div class="player-input-group">
-        <input type="text" id="playerNameInput" placeholder="Name des Spielers..." maxlength="12">
+        <input type="text" id="playerNameInput" placeholder="Name des Spielers..." maxlength="12" onfocus="this.select()" onkeydown="if(event.key === 'Enter') addPlayer()">
         <button class="btn btn-primary" onclick="addPlayer()">Hinzufügen</button>
       </div>
       
@@ -1175,10 +1181,32 @@
       updateTableUI();
     }
 
-    // Zoom/Pinch verhindern
+    // Zoom/Pinch & Tastenkombinationen für Zoom verhindern
     document.addEventListener('gesturestart', function (e) {
       e.preventDefault();
     });
+    document.addEventListener('wheel', function (e) {
+      if (e.ctrlKey) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+    document.addEventListener('keydown', function (e) {
+      if (e.ctrlKey && (e.key === '=' || e.key === '-' || e.key === '0' || e.key === '+')) {
+        e.preventDefault();
+      }
+    });
+
+    // Doppeltippen-Zoom auf Dokumentebene unterbinden (außer in Eingabefeldern)
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function (e) {
+      const now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) {
+        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT' && e.target.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+        }
+      }
+      lastTouchEnd = now;
+    }, false);
   </script>
 
 </body>
